@@ -1,0 +1,1 @@
+DIR_DATA_BASE="./db/guardioes_banco.db"
