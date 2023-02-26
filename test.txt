@@ -1,0 +1,80 @@
+import discord
+from discord.ext import commands
+
+bot = commands.Bot(command_prefix='!')
+
+controller = AccountController()
+
+@bot.command()
+async def create(ctx, name):
+    controller.add_account(name)
+    await ctx.send(f'Conta para {name} criada.')
+
+@bot.command()
+async def balance(ctx, name):
+    account = controller.get_account(name)
+    if account is None:
+        await ctx.send(f'Conta para {name} não encontrada.')
+    else:
+        message = f'Saldo de {account.name}:'
+        message += f'\nBronze: {account.bronze}'
+        message += f'\nPrata: {account.silver}'
+        message += f'\nOuro: {account.gold}'
+        message += f'\nPlatina: {account.platinum}'
+        await ctx.send(message)
+
+@bot.command()
+async def deposit(ctx, name, type, amount):
+    account = controller.get_account(name)
+    if account is None:
+        await ctx.send(f'Conta para {name} não encontrada.')
+    else:
+        if type == 'bronze':
+            account.bronze += int(amount)
+        elif type == 'silver':
+            account.silver += int(amount)
+        elif type == 'gold':
+            account.gold += int(amount)
+        elif type == 'platinum':
+            account.platinum += int(amount)
+        else:
+            await ctx.send('Tipo de moeda inválido.')
+            return
+        if controller.update_account(account):
+            await ctx.send(f'{amount} {type} depositado na conta de {name}.')
+        else:
+            await ctx.send('Saldo de moeda excede o limite permitido.')
+
+@bot.command()
+async def withdraw(ctx, name, type, amount):
+    account = controller.get_account(name)
+    if account is None:
+        await ctx.send(f'Conta para {name} não encontrada.')
+    else:
+        if type == 'bronze':
+            account.bronze -= int(amount)
+        elif type == 'silver':
+            account.silver -= int(amount)
+        elif type == 'gold':
+            account.gold -= int(amount)
+        elif type == 'platinum':
+            account.platinum -= int(amount)
+        else:
+            await ctx.send('Tipo de moeda inválido.')
+            return
+        if controller.update_account(account):
+            await ctx.send(f'{amount} {type} sacado da conta de {name}.')
+        else:
+            await ctx.send('Saldo de moeda insuficiente ou excede o limite permitido.')
+
+@bot.command()
+async def delete(ctx, name):
+    controller.delete_account(name)
+    await ctx.send(f'Conta para {name} excluída.')
+
+@bot.command()
+async def close(ctx):
+    controller.close()
+    await bot.close()
+
+bot.run('TOKEN')
